@@ -71,6 +71,8 @@ const clients = {}; // clientId -> socketId
 io.on("connection", (socket) => {
   console.log("socket connected:", socket.id);
 
+ 
+
   socket.on("join", (clientId) => {
     if (!clientId) clientId = uuidv4();
     clients[clientId] = socket.id;
@@ -80,20 +82,27 @@ io.on("connection", (socket) => {
     console.log("join", clientId);
   });
 
-  socket.on("offer", ({ to, from, sdp, pcIndex }) => {
+   // TEST EVENT
+  socket.on("message", (msg) => {
+    console.log("message from client:", msg);
+    // socket.emit("test-response", `Server received: ${msg}`);
+    socket.broadcast.emit("message", `Server received: ${msg}`);
+  })
+
+  socket.on("offer", ({ to, from, sdp }) => {
     const toSocket = clients[to];
-    if (toSocket) io.to(toSocket).emit("offer", { from, sdp, pcIndex });
+    if (toSocket) io.to(toSocket).emit("offer", { from, sdp });
   });
 
-  socket.on("answer", ({ to, from, sdp, pcIndex }) => {
+  socket.on("answer", ({ to, from, sdp }) => {
     const toSocket = clients[to];
-    if (toSocket) io.to(toSocket).emit("answer", { from, sdp, pcIndex });
+    if (toSocket) io.to(toSocket).emit("answer", { from, sdp });
   });
 
-  socket.on("ice-candidate", ({ to, from, candidate, pcIndex }) => {
+  socket.on("ice-candidate", ({ to, from, candidate }) => {
     const toSocket = clients[to];
     if (toSocket)
-      io.to(toSocket).emit("ice-candidate", { from, candidate, pcIndex });
+      io.to(toSocket).emit("ice-candidate", { from, candidate });
   });
   socket.on("call", ({ to, from }) => {
     const toSocket = clients[to];
